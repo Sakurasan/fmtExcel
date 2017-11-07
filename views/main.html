@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+    <title>FmtExcel - 格式化Excel</title>
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+                        aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                <a class="hidden-xs logo" href="/">
+                    <img style="height:45px;width:55px;" src="/static/img/logo.png">
+                </a> 
+                     <!-- <a class="navbar-brand" href="">FmtExcel</a>  -->
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                         <li><a href="/" target="_blank">HOME</a></li> 
+                        <li><a href="/" target="_blank">About</a></li>
+                        <!-- <li><a href="/paycancle" target="_blank">订单取消</a></li>
+                        <li><a href="/payrefund" target="_blank">订单退款</a></li> -->
+
+                    </ul>
+                    <!--       <form class="navbar-form navbar-right">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search">
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+      </form> -->
+
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+    </header>
+
+    <container>
+        <div class="col-md-2">
+
+        </div>
+        <div class="col-md-5">
+
+            <h2>开始</h2>
+            <hr>
+
+            <form enctype="multipart/form-data" method="post" action="/" id="new-form">
+                <!-- <div class="form-group">
+                    <label>文章标题：</label>
+                    <input type="text" class="form-control" name="title" placeholder="（必填）" aria-required="true" required="">
+                </div> -->
+
+                <!--<div class="form-group">
+                <label>文章分类</label>
+                <input type="text" class="form-control" name="category"> 
+                </div> -->
+                <!-- <div class="form-group">
+                    <label>分类:</label>
+                    <select class="form-control" name="cate">
+                        <option>A</option>
+                        <option>B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>命名分类:</label>
+                    <select class="form-control" name="namecate">
+                        <option>A</option>
+                        <option>B</option>
+                    </select>
+                </div> -->
+
+                <div class="form-group">
+                    <label>筛选列：</label>
+                    <input type="text" class="form-control" name="cate" placeholder="第‘0’列开始" aria-required="true" required="">
+                </div>
+                <div class="form-group">
+                    <label>命名选择：</label>
+                    <input type="text" class="form-control" name="namecate" placeholder="第‘0’列开始" aria-required="true" required="">
+                </div>
+                 <div class="form-group">
+                    <label for="exampleInputFile">File input</label>
+                    <input type="file" id="exampleInputFile" name="excel">
+                    <p class="help-block">选择 待处理的Excel文件.</p>
+                </div> 
+
+                <button id="submitId" type="submit" class="btn btn-default">提交</button>
+            </form>
+        </div>
+
+        {{if .App}}
+        <div class="col-md-4">
+            <br>
+            <!-- <p><h3 style="color:#0A77C0">{{.App}}</h3></p> -->
+            <div class="alert alert-success" role="alert" style="font-size:18px">
+                <strong>Well done!</strong> {{.App}}
+            </div>
+            <br>
+
+            <div class="alert alert-info" role="alert" style="font-size:18px">
+                <a href="/static/upload/{{.Url}}.tar.gz">下载{{.Url}}</a>
+            </div>
+            
+        </div>
+        {{end}}
+
+        <!-- <div class="col-md-4">
+            <img src="http://qr.liantu.com/api.php?text=https://qr.alipay.com/bax02179hfaadwa1yuln0059">
+        </div> -->
+
+    </container>
+</body>
+
+</html>
