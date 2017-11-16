@@ -6,6 +6,7 @@ import (
 	"fmt"
 	_ "fmtExcel/routers"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/astaxie/beego"
@@ -19,7 +20,7 @@ var delimiter = flag.String("d", ";", "Delimiter to use between fields")
 func main() {
 	beego.Run()
 
-	// xlFile, error := xlsx.OpenFile("static/upload/excel9.xlsx")
+	// xlFile, error := xlsx.OpenFile("static/upload/9T.xlsx")
 	// if error != nil {
 	// 	fmt.Println("打开失败")
 	// 	return
@@ -37,7 +38,7 @@ func main() {
 	// sheet := xlFile.Sheets[0]
 	// var ColList []string
 	// var ColsList [][]string
-	// var temp [][]string
+	// // var temp [][]string
 
 	// for index, row := range sheet.Rows {
 	// 	if index == 0 {
@@ -55,12 +56,22 @@ func main() {
 	// 		// outputf(strings.Join(vals, *delimiter) + "\n")
 	// 		fmt.Println("列？", vals)
 	// 		if vals[1] != "" {
-	// 			ColList = append(ColList, vals[0]) //过滤依据
+	// 			ColList = append(ColList, vals[1]) //过滤依据
 	// 			ColsList = append(ColsList, vals)
 	// 		}
 	// 	}
 	// }
-	// fmt.Println("\n---------------\n第一列", ColList)
+	// // fmt.Println("\n---------------\n第一列", ColList)
+	// fmt.Println("\n---------------\n原列")
+	// for _, v := range ColsList {
+	// 	fmt.Println(v)
+	// }
+
+	// result := arraySort(ColsList, 1)
+	// fmt.Println("\n---------------\n排序列")
+	// for _, v := range result {
+	// 	fmt.Println(v)
+	// }
 
 	// fmt.Println("===============================\n行集合", ColsList, "\n")
 	// var kFlag string
@@ -79,7 +90,7 @@ func main() {
 	// 		fmt.Println("**************************\n归档F:", ColsList[i])
 
 	// 	}
-	// 	ExcelWriter(kFlag, temp)
+	// 	// ExcelWriter(kFlag, temp)
 	// }
 
 	// ExcelWriter00()
@@ -146,4 +157,51 @@ func IsExist(name string) bool {
 	//return err == nil || !os.IsNotExist(err)
 	// 或者
 	//return !os.IsNotExist(err)
+}
+
+//按指定规则对nums进行排序(注：此firstIndex从0开始)
+func arraySort(nums [][]string, firstIndex int) [][]string {
+	//检查
+	if len(nums) <= 1 {
+		return nums
+	}
+
+	if firstIndex < 0 || firstIndex > len(nums[0])-1 {
+		fmt.Println("Warning: Param firstIndex should between 0 and len(nums)-1. The original array is returned.")
+		return nums
+	}
+
+	//排序
+	mIntArray := &mArray{nums, firstIndex}
+	sort.Sort(mIntArray)
+	return mIntArray.mArr
+}
+
+type mArray struct {
+	mArr       [][]string
+	firstIndex int
+}
+
+//IntArray实现sort.Interface接口
+func (arr *mArray) Len() int {
+	return len(arr.mArr)
+}
+
+func (arr *mArray) Swap(i, j int) {
+	arr.mArr[i], arr.mArr[j] = arr.mArr[j], arr.mArr[i]
+}
+
+func (arr *mArray) Less(i, j int) bool {
+	arr1 := arr.mArr[i]
+	arr2 := arr.mArr[j]
+
+	for index := arr.firstIndex; index < len(arr1); index++ {
+		if arr1[index] < arr2[index] {
+			return true
+		} else if arr1[index] > arr2[index] {
+			return false
+		}
+	}
+
+	return i < j
 }

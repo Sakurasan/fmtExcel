@@ -1,3 +1,7 @@
+.gitignore
 .Archive/
 *.exe*
 fmtExcel
+static/upload/2017*/
+
+static/upload/*

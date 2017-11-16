@@ -8,12 +8,18 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/tealeg/xlsx"
+	"github.com/xuri/excelize"
+)
+
+var (
+	firstCol []string
 )
 
 type MainController struct {
@@ -60,8 +66,12 @@ func (this *MainController) Post() {
 	fmtExcel(catecode, namecatecode, timefile, h.Filename)
 	fmt.Println("cmd ok?")
 	// exec_shell("./static/upload/tar.sh " + timefile)
-	exec_shell(fmt.Sprintf("./static/upload/tar.sh ./static/upload/%v ", timefile))
-	fmt.Println("cmd is OK!")
+	if err := exec_shell(fmt.Sprintf("./static/upload/tar.sh ./static/upload/%v ", timefile)); err == nil {
+		fmt.Println("cmd is OK!")
+	} else {
+		fmt.Println(err)
+	}
+
 	this.Data["Url"] = timefile
 }
 
@@ -108,9 +118,9 @@ func Ziper([]string) {
 //格式化 Excel
 func fmtExcel(num, name int, timepath, filename string) {
 	// xlFile, error := xlsx.OpenFile("static/upload/" + pathname + "/" + filename)
-	xlFile, error := xlsx.OpenFile(fmt.Sprintf("static/upload/%v/%v", timepath, filename))
+	xlFile, err := xlsx.OpenFile(fmt.Sprintf("static/upload/%v/%v", timepath, filename))
 	// xlFile, error := xlsx.OpenFile("static/upload/9.xlsx")
-	if error != nil {
+	if err != nil {
 		fmt.Println("打开失败")
 		return
 	}
@@ -131,12 +141,21 @@ func fmtExcel(num, name int, timepath, filename string) {
 
 	for index, row := range sheet.Rows {
 		if index == 0 {
+			for _, cell := range row.Cells {
+				// str, err := cell.Float()
+				str, err := cell.FormattedValue()
+				if err != nil {
+					firstCol = append(firstCol, err.Error())
+				}
+				firstCol = append(firstCol, fmt.Sprintf("%s", str))
+			}
 			continue
 		}
 		var vals []string
 		if row != nil {
 			for _, cell := range row.Cells {
-				str, err := cell.FormattedValue()
+				// str, err := cell.FormattedValue()
+				str, err := cell.String()
 				if err != nil {
 					vals = append(vals, err.Error())
 				}
@@ -144,35 +163,64 @@ func fmtExcel(num, name int, timepath, filename string) {
 			}
 			// outputf(strings.Join(vals, *delimiter) + "\n")
 			fmt.Println("单行？", vals)
-			if vals[1] != "" {
-				ColList = append(ColList, vals[num]) //筛选列,标志位
-				ColsList = append(ColsList, vals)    //筛选容器,二维数组
+			if vals[num] != "" {
+				// ColList = append(ColList, vals[num]) //筛选列,标志位
+				ColsList = append(ColsList, vals) //筛选容器,二维数组
 			}
 		}
 	}
 	fmt.Println("\n---------------\n列,单一行", ColList)
 
-	fmt.Println("===============================\n行集合", ColsList, "\n")
+	fmt.Println("===============================\n排序集合\n=================================")
+	result := arraySort(ColsList, num) //筛选排序
+	for _, v := range result {
+		fmt.Println(v)
+	}
+	for _, arr := range result {
+		ColList = append(ColList, arr[name]) //筛选列,索引列，命名标志位
+	}
+	fmt.Println("排序的索引列->", ColList)
+
 	var kFlag string
-	kFlag = ColList[name] //命名标志
+	kFlag = ColList[0] //命名标志
 	for i, v := range ColList {
 
 		if kFlag == v {
-			temp = append(temp, ColsList[i])
-			fmt.Println("归档T:", ColsList[i])
+			temp = append(temp, result[i])
+			// fmt.Println("归档T:", result[i])
 
 		} else {
-			fmt.Println("标志位->", kFlag)
+			// fmt.Println("标志位->", kFlag)
 			temp = nil
 			kFlag = v
-			temp = append(temp, ColsList[i])
-			fmt.Println("**************************\n归档F:", ColsList[i])
+			temp = append(temp, result[i])
+			// fmt.Println("**************************\n归档F:", result[i])
 		}
-		ExcelWriter(timepath, kFlag, temp)
+		// ExcelWriter(timepath, kFlag, temp) //csv
+		WriteExcel(timepath, kFlag, temp) //xlsx
 	}
 
 	// ExcelWriter00()
 	return
+}
+
+func readExcel() {
+	xlsx, err := excelize.OpenFile("static/upload/9T.xlsx")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Get value from cell by given worksheet name and axis.
+	cell := xlsx.GetCellValue("Sheet1", "B2")
+	fmt.Println(cell)
+	// Get all the rows in the Sheet1.
+	rows := xlsx.GetRows("Sheet1")
+	for _, row := range rows {
+		for _, colCell := range row {
+			fmt.Print(colCell, "\t")
+		}
+		fmt.Println()
+	}
 }
 
 //将行的Cells直接读取成字符串数组
@@ -192,7 +240,7 @@ func GetCellValues(r *xlsx.Row) (cells []string) {
 // 写文件
 func ExcelWriter(path, name string, exceldata [][]string) {
 
-	fmt.Println("写文件->", path, "+", name)
+	fmt.Println("写文件[文件夹+文件名]->", path, "+", name)
 	// fmt.Println("static/update/" + path + "/" + name + ".xls")
 	// fmt.Println("路径->", fmt.Sprintf(`static/update/%v/%s.xls`, path, name))
 	f, err := os.Create(fmt.Sprintf(`static/upload/%v/%s.csv`, path, name)) //name[1:len(name)-1]
@@ -204,7 +252,8 @@ func ExcelWriter(path, name string, exceldata [][]string) {
 	defer f.Close()
 	f.WriteString("\xEF\xBB\xBF") // 写入UTF-8 BOM
 	w := csv.NewWriter(f)
-	w.Write([]string{"分公司代码", "", "流水日期", "交易金额", "商户手续费", "机构分润"})
+	// w.Write([]string{"分公司代码", "", "流水日期", "交易金额", "商户手续费", "机构分润"})
+	w.Write(firstCol)
 	for i, v := range exceldata {
 		if v != nil {
 			w.Write(exceldata[i])
@@ -230,7 +279,7 @@ func ExcelWriter(path, name string, exceldata [][]string) {
 // 	w.Write([]string{"4", "赵六", "26"})
 // 	w.Flush()
 // }
-
+//
 func IsExist(name string) bool {
 	path := fmt.Sprintf("%s.xls", name)
 	_, err := os.Stat(path)
@@ -250,14 +299,106 @@ func convCode(code string) int {
 	return 0
 }
 
-func exec_shell(s string) {
+func exec_shell(s string) error {
 	cmd := exec.Command("/bin/bash", "-c", s)
 	var out bytes.Buffer
 
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		// log.Println(err)
+		return err
 	}
 	fmt.Printf("%s", out.String())
+	return nil
+}
+
+//按指定规则对nums进行排序(注：此firstIndex从0开始)
+func arraySort(nums [][]string, firstIndex int) [][]string {
+	//检查
+	if len(nums) <= 1 {
+		return nums
+	}
+
+	if firstIndex < 0 || firstIndex > len(nums[0])-1 {
+		fmt.Println("Warning: Param firstIndex should between 0 and len(nums)-1. The original array is returned.")
+		return nums
+	}
+
+	//排序
+	mIntArray := &mArray{nums, firstIndex}
+	sort.Sort(mIntArray)
+	return mIntArray.mArr
+}
+
+type mArray struct {
+	mArr       [][]string
+	firstIndex int
+}
+
+//IntArray实现sort.Interface接口
+func (arr *mArray) Len() int {
+	return len(arr.mArr)
+}
+
+func (arr *mArray) Swap(i, j int) {
+	arr.mArr[i], arr.mArr[j] = arr.mArr[j], arr.mArr[i]
+}
+
+func (arr *mArray) Less(i, j int) bool {
+	arr1 := arr.mArr[i]
+	arr2 := arr.mArr[j]
+
+	for index := arr.firstIndex; index < len(arr1); index++ {
+		if arr1[index] < arr2[index] {
+			return true
+		} else if arr1[index] > arr2[index] {
+			return false
+		}
+	}
+
+	return i < j
+}
+
+func WriteExcel(path, name string, exceldata [][]string) {
+
+	var file *xlsx.File
+	var sheet *xlsx.Sheet
+	var row *xlsx.Row
+	var cell *xlsx.Cell
+	// var col *xlsx.Col
+	var err error
+	// var slc = []string{"分公司代码", "", "流水日期", "交易金额", "商户手续费", "机构分润"}
+
+	file = xlsx.NewFile()
+	sheet, _ = file.AddSheet("Sheet1")
+	row = sheet.AddRow()
+
+	for _, v := range firstCol {
+		cell = row.AddCell()
+		cell.Value = v
+		// f, _ := strconv.ParseFloat(v, 64)
+		// cell.SetFloat(f)
+	}
+	for _, rowdata := range exceldata {
+		row = sheet.AddRow()
+		for _, data := range rowdata {
+			cell = row.AddCell()
+
+			f, err := strconv.ParseFloat(data, 64)
+			if err == nil {
+				// cell.SetFloatWithFormat(f, "#0.00")
+				cell.SetFloat(f)
+			} else {
+				cell.Value = data
+			}
+
+		}
+	}
+
+	err = file.Save(fmt.Sprintf(`static/upload/%v/%s.xlsx`, path, name))
+	if err != nil {
+		fmt.Println("保存失败!")
+	}
+
 }
