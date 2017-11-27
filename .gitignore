@@ -3,5 +3,6 @@
 *.exe*
 fmtExcel
 static/upload/2017*/
+static/ZipFile/
 
 static/upload/*

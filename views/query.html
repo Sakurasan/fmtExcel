@@ -38,13 +38,11 @@
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
+                    <!-- <ul class="nav navbar-nav">
                         <li><a href="/" target="_blank">HOME</a></li>
                         <li><a href="/query" target="_blank">查询</a></li>
-                        <!-- <li><a href="/paycancle" target="_blank">订单取消</a></li>
-                        <li><a href="/payrefund" target="_blank">订单退款</a></li> -->
-
-                    </ul>
+                    </ul> -->
+                    {{template "header" .}}
                     <!--       <form class="navbar-form navbar-right">
         <div class="form-group">
           <input type="text" class="form-control" placeholder="Search">
@@ -82,7 +80,7 @@
                             </select>
                         </div><br> 输入订单：&nbsp&nbsp&nbsp
                         <input type="text" class="form-control" name="order_id" id="order_id" placeholder="订单号 |多个订单号请用‘ , ’分割(如：2017xxxxx,2017yyyyy) " aria-required="true" required="">
-                        <br><br>  
+                        <br>  
                          <!-- 输入日期：&nbsp&nbsp&nbsp -->
                         <!-- <input type="text" class="form-control" name="mer_date" id="mer_date" placeholder="日期格式:YYYYMMDD" aria-required="true" required=""><br><br> -->
                         <!-- 输入商户号：<input type="text" class="form-control" name="merid" id="merid" placeholder="商户号" aria-required="true" required=""><br><br> -->
@@ -90,6 +88,7 @@
                         <input type="submit" id="btn1" class="btn btn-primary" value="提交处理" onclick="showFiles();showTB()"><br>
                     </form>
                     {{if .Twodata}}
+                    <br>
                     <strong> 显示数据：</strong>
                     <div id="mydata" width="100%"> <br> </div>
                     <div class="bs-example," data-example-id="bordered-table" id="tbplay" >
